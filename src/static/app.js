@@ -28,7 +28,12 @@ document.addEventListener("DOMContentLoaded", () => {
       card.className = "activity-card";
 
       const participantsList = details.participants
-        .map((email) => `<li>${email}</li>`)
+        .map((email) => `
+          <li>
+            <span class="participant-email">${email}</span>
+            <span class="delete-icon" data-activity="${name}" data-email="${email}" title="Remove participant">✕</span>
+          </li>
+        `)
         .join("");
 
       card.innerHTML = `
@@ -45,6 +50,11 @@ document.addEventListener("DOMContentLoaded", () => {
       `;
 
       activitiesList.appendChild(card);
+    });
+
+    // Add event listeners to delete icons
+    document.querySelectorAll('.delete-icon').forEach(icon => {
+      icon.addEventListener('click', handleDeleteParticipant);
     });
   }
 
@@ -101,6 +111,47 @@ document.addEventListener("DOMContentLoaded", () => {
       messageDiv.classList.add("hidden");
     }, 5000);
   });
+
+  // Handle participant deletion
+  async function handleDeleteParticipant(event) {
+    const activityName = event.target.dataset.activity;
+    const email = event.target.dataset.email;
+
+    if (!confirm(`Are you sure you want to remove ${email} from ${activityName}?`)) {
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `/activities/${encodeURIComponent(activityName)}/unregister?email=${encodeURIComponent(email)}`,
+        {
+          method: "DELETE",
+        }
+      );
+
+      const result = await response.json();
+
+      if (response.ok) {
+        messageDiv.className = "message success";
+        messageDiv.textContent = result.message;
+        messageDiv.classList.remove("hidden");
+
+        // Reload activities to show updated participant list
+        await loadActivities();
+      } else {
+        throw new Error(result.detail || "Unregister failed");
+      }
+    } catch (error) {
+      messageDiv.className = "message error";
+      messageDiv.textContent = error.message;
+      messageDiv.classList.remove("hidden");
+    }
+
+    // Hide message after 5 seconds
+    setTimeout(() => {
+      messageDiv.classList.add("hidden");
+    }, 5000);
+  }
 
   // Load activities when page loads
   loadActivities();
