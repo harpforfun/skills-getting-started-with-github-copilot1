@@ -44,7 +44,7 @@ document.addEventListener("DOMContentLoaded", () => {
         <div class="participants-section">
           <h5>Current Participants <span class="participants-count">(${details.participants.length})</span></h5>
           <ul class="participants-list">
-            ${participantsList || '<li style="color: #999;">No participants yet</li>'}
+            ${details.participants.length > 0 ? participantsList : '<li style="color: #999;">No participants yet</li>'}
           </ul>
         </div>
       `;
